@@ -2,6 +2,7 @@ import os
 from copy import deepcopy
 from typing import List, Tuple, Literal, Optional
 
+from textual import events
 from textual.containers import Horizontal, Grid, Vertical
 from textual.events import Click, Key
 from textual.message import Message
@@ -143,39 +144,21 @@ class RebaseTodoWidget(Widget):
         self._todo_state.select_single(event.commit_index)
         self.refresh(recompose=True)
 
-    def on_click(self, event: Click):
-        # check if a file was clicked
-        file_grid = self.query_one("#file_grid")
-        for child_index, child in enumerate(file_grid.children):
-            if child is not event.widget:
-                continue
+    def on_file_grid_clicked_file(self, event):
+        # select file
+        self._active_file_index = event.file_index
 
-            # File change indicator was clicked. Select it and toggle it.
+        # toggle file
+        rebase_items = deepcopy(self._todo_state.get_current_items())
+        file_change = rebase_items[event.commit_index].file_changes[event.file_path]
+        file_change.modified = not file_change.modified
+        self._todo_state.modify_items(rebase_items)
 
-            commit_index = child_index // len(self._visible_files) - 1
-            file_index = child_index % len(self._visible_files)
+        # select commit
+        self._todo_state.set_cursor(event.commit_index)
+        self._todo_state.select_single(event.commit_index)
 
-            # get file change object
-            rebase_items = self._todo_state.get_current_items()
-            file = self._visible_files[file_index]
-            file_change = rebase_items[commit_index].file_changes.get(file)
-            if file_change is None:
-                # This file change isn't included in this commit. It is a blank space in the UI. Do nothing.
-                return
-
-            # select file
-            self._active_file_index = file_index
-
-            # toggle file
-            file_change.modified = not file_change.modified
-            self._todo_state.modify_items(rebase_items)
-
-            # select commit
-            self._todo_state.set_cursor(commit_index)
-            self._todo_state.select_single(commit_index)
-
-            self.refresh(recompose=True)
-            return
+        self.refresh(recompose=True)
 
     def action_copy(self):
         self._todo_state.insert_item(
@@ -377,6 +360,13 @@ class CommitGrid(Grid):
 
 
 class FileGrid(Grid):
+    class ClickedFile(Message):
+        def __init__(self, commit_index, file_index, file_path):
+            self.commit_index = commit_index
+            self.file_index = file_index
+            self.file_path = file_path
+            super().__init__()
+
     def __init__(
         self,
         rebase_items: Tuple[RebaseItem, ...],
@@ -403,6 +393,29 @@ class FileGrid(Grid):
         # An extra row is added at the bottom so the scroll bar doesn't cover the bottom row.
         self.styles.height = len(rebase_items) + 2
         self.styles.overflow_x = "auto"
+
+    def on_click(self, event: Click) -> None:
+        for child_index, child in enumerate(self.children):
+            if child is not event.widget:
+                continue
+
+            # This widget was clicked
+
+            # get commit index (row) and file index (column)
+            commit_index = child_index // len(self._visible_files) - 1
+            file_index = child_index % len(self._visible_files)
+
+            # Check if there is a file change in the clicked region, or just a blank space.
+            file = self._visible_files[file_index]
+            file_change = self._rebase_items[commit_index].file_changes.get(file)
+
+            # Post message if a file change indicator was clicked.
+            if file_change is not None:
+                self.post_message(
+                    self.ClickedFile(commit_index, file_index, file_change.path)
+                )
+
+            return
 
     def compose(self):
         # header row
