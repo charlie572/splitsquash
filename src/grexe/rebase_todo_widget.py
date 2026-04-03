@@ -2,7 +2,6 @@ import os
 from copy import deepcopy
 from typing import List, Tuple, Literal, Optional
 
-from textual import events
 from textual.containers import Horizontal, Grid, Vertical
 from textual.events import Click, Key
 from textual.message import Message
@@ -48,6 +47,11 @@ class RebaseTodoWidget(Widget):
         self._visible_files = list(set(self._visible_files))
 
         self._last_hovered_file = None
+
+        # children
+        self._status_label: Optional[Label] = None
+        self._commit_grid: Optional[CommitGrid] = None
+        self._file_grid: Optional[FileGrid] = None
 
     def _on_changed_active_item(self, cursor: int, active_item: RebaseItem):
         pass
@@ -99,10 +103,10 @@ class RebaseTodoWidget(Widget):
             self.action_select_all()
         if event.key == "ctrl+z":
             self._todo_state.undo()
-            self.refresh(recompose=True)
+            self._update()
         if event.key == "ctrl+y":
             self._todo_state.redo()
-            self.refresh(recompose=True)
+            self._update()
         if event.key == "q":
             self.action_distribute()
 
@@ -111,7 +115,7 @@ class RebaseTodoWidget(Widget):
             picked_valid_sources = self._item_distributor.pick_sources()
             if picked_valid_sources:
                 self._state = "distributing"
-                self.refresh(recompose=True)
+                self._update()
         elif self._state == "distributing":
             picked_valid_targets = self._item_distributor.pick_targets()
             if picked_valid_targets:
@@ -122,7 +126,7 @@ class RebaseTodoWidget(Widget):
                 self._item_distributor.reset()
 
             self._state = "idle"
-            self.refresh(recompose=True)
+            self._update()
 
     def get_active_item(self):
         return self._todo_state.get_active_item()
@@ -141,7 +145,7 @@ class RebaseTodoWidget(Widget):
     def on_commit_grid_clicked_commit(self, event):
         self._todo_state.set_cursor(event.commit_index)
         self._todo_state.select_single(event.commit_index)
-        self.refresh(recompose=True)
+        self._update()
 
     def on_file_grid_clicked_file(self, event):
         # select file
@@ -157,13 +161,13 @@ class RebaseTodoWidget(Widget):
         self._todo_state.set_cursor(event.commit_index)
         self._todo_state.select_single(event.commit_index)
 
-        self.refresh(recompose=True)
+        self._update()
 
     def action_copy(self):
         self._todo_state.insert_item(
             self._todo_state.get_active_item(), self._todo_state.cursor
         )
-        self.refresh(recompose=True)
+        self._update()
 
     def action_toggle_file(self):
         rebase_items = list(deepcopy(self._todo_state.get_current_items()))
@@ -174,7 +178,7 @@ class RebaseTodoWidget(Widget):
         file_change.modified = not file_change.modified
 
         self._todo_state.modify_items(tuple(rebase_items))
-        self.refresh(recompose=True)
+        self._update()
 
     def action_move_left(self):
         active_item = self._todo_state.get_current_items()[self._todo_state.cursor]
@@ -188,7 +192,7 @@ class RebaseTodoWidget(Widget):
             if file in active_item.file_changes:
                 break
 
-        self.refresh(recompose=True)
+        self._update()
 
     def action_move_right(self):
         active_item = self._todo_state.get_current_items()[self._todo_state.cursor]
@@ -202,7 +206,7 @@ class RebaseTodoWidget(Widget):
             self._active_file_index += 1
             file = self._visible_files[self._active_file_index]
             if file in active_item.file_changes:
-                self.refresh(recompose=True)
+                self._update()
                 return
 
         # No more files. Reset index to what it was before this function was run.
@@ -212,35 +216,35 @@ class RebaseTodoWidget(Widget):
         if self._state == "idle":
             self._item_mover.start_moving()
             self._state = "moving"
-            self.refresh(recompose=True)
+            self._update()
         elif self._state == "moving":
             self._item_mover.stop_moving()
             self._state = "idle"
-            self.refresh(recompose=True)
+            self._update()
 
     def action_move_up(self):
         if self._state == "moving":
             self._item_mover.move_up()
-            self.refresh(recompose=True)
+            self._update()
         else:
             self._todo_state.move_cursor("dec")
-            self.refresh(recompose=True)
+            self._update()
 
     def action_move_down(self):
         if self._state == "moving":
             self._item_mover.move_down()
-            self.refresh(recompose=True)
+            self._update()
         else:
             self._todo_state.move_cursor("inc")
-            self.refresh(recompose=True)
+            self._update()
 
     def action_select(self):
         self._todo_state.toggle_active_item()
-        self.refresh(recompose=True)
+        self._update()
 
     def action_select_all(self):
         self._todo_state.toggle_select_all_or_none()
-        self.refresh(recompose=True)
+        self._update()
 
     def _set_rebase_action(self, action: RebaseAction):
         rebase_items = deepcopy(self._todo_state.get_current_items())
@@ -249,75 +253,106 @@ class RebaseTodoWidget(Widget):
             rebase_items[i].action = action
 
         self._todo_state.modify_items(rebase_items)
-        self.refresh(recompose=True)
+        self._update()
 
     def set_visible_files(self, visible_files):
         self._visible_files = visible_files
-        self.refresh(recompose=True)
+        self._update()
 
-    def compose(self):
+    def _update(self):
+        """Update the state of all the children, and refresh them"""
+
         rebase_items = self._todo_state.get_current_items()
-
-        # The left half of the widget shows the rebase actions, hashes, and commit messages. The
-        # right half shows the file changes. The right half is scrollable horizontally. Both halves
-        # are grid layouts.
 
         if self._state == "moving":
             highlighted_indices = self._item_mover.get_moving_indices()
         else:
             highlighted_indices = self._todo_state.get_selected_indices()
 
+        status_text = (
+            "Select commits to distribute into..."
+            if self._state == "distributing"
+            else ""
+        )
+        self._status_label.update(status_text)
+
+        self._commit_grid.update_state(
+            rebase_items,
+            self._todo_state.cursor if self._state != "moving" else None,
+            highlighted_indices,
+        )
+
+        self._file_grid.update_state(
+            rebase_items,
+            self._todo_state.cursor if self._state != "moving" else None,
+            self._active_file_index,
+            highlighted_indices,
+            self._visible_files,
+        )
+
+        self._commit_grid.refresh(recompose=True)
+        self._file_grid.refresh(recompose=True)
+
+    def compose(self):
+        # The left half of the widget shows the rebase actions, hashes, and commit messages. The
+        # right half shows the file changes. The right half is scrollable horizontally. Both halves
+        # are grid layouts.
+
+        # Instantiate the children as empty widgets, then populate them with state
+        self._status_label = Label()
+        self._commit_grid = CommitGrid()
+        self._file_grid = FileGrid()
+        self._update()
+
         with Vertical():
-            status_text = (
-                "Select commits to distribute into..."
-                if self._state == "distributing"
-                else ""
-            )
-            yield Label(status_text)
+            yield self._status_label
 
             with Horizontal():
-                yield CommitGrid(
-                    rebase_items,
-                    self._todo_state.cursor if self._state != "moving" else None,
-                    highlighted_indices,
-                    id="commit_grid",
-                )
-
-                yield FileGrid(
-                    rebase_items,
-                    self._todo_state.cursor if self._state != "moving" else None,
-                    self._active_file_index,
-                    highlighted_indices,
-                    self._visible_files,
-                    id="file_grid",
-                )
+                yield self._commit_grid
+                yield self._file_grid
 
 
 class CommitGrid(Grid):
+    """Displays a list of rebase items, showing their hashes and messages
+
+    The constructor has no parameters. You must instantiate it as an empty widget,
+    then populate the state using the update_state() method.
+    """
+
     class ClickedCommit(Message):
         def __init__(self, commit_index):
             self.commit_index = commit_index
             super().__init__()
 
-    def __init__(
-        self,
-        rebase_items: Tuple[RebaseItem, ...],
-        active_index: Optional[int],
-        highlighted_indices: List[int],
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._rebase_items = rebase_items
-        self._active_index = active_index
-        self._highlighted_indices = highlighted_indices
+        self._rebase_items: Tuple[RebaseItem, ...] = ()
+        self._active_index: Optional[int] = None
+        self._highlighted_indices: List[int] = []
 
         self.styles.grid_columns = "auto"
         self.styles.grid_gutter_vertical = 2
         self.styles.grid_rows = "1"
-        self.styles.grid_size_rows = len(rebase_items) + 1
+        self.styles.grid_size_rows = 1
         self.styles.grid_size_columns = 3
+        self.styles.height = 1
+
+    def update_state(
+        self,
+        rebase_items: Tuple[RebaseItem, ...],
+        active_index: Optional[int],
+        highlighted_indices: List[int],
+    ):
+        """Set all of the state
+
+        Call this method after instantiating the widget. Call it again to update all the state.
+        """
+        self._rebase_items = rebase_items
+        self._active_index = active_index
+        self._highlighted_indices = highlighted_indices
+
+        self.styles.grid_size_rows = len(rebase_items) + 1
         self.styles.height = len(rebase_items) + 1
 
     def on_click(self, event: Click):
@@ -359,6 +394,20 @@ class CommitGrid(Grid):
 
 
 class FileGrid(Grid):
+    """Displays FileChangeIndicators for a list of commits
+
+    There is one row for each commit, and each row contains one indicator for each
+    file.
+
+    Each indicator shows
+    - a dot is shown if the file is included in the commit
+    - a cross if it is included, but the user has clicked on it to remove it
+    - nothing otherwise
+
+    The constructor has no parameters. You must instantiate it as an empty widget,
+    then populate the state using the update_state() method.
+    """
+
     class ClickedFile(Message):
         def __init__(self, commit_index, file_index, file_path):
             self.commit_index = commit_index
@@ -366,32 +415,46 @@ class FileGrid(Grid):
             self.file_path = file_path
             super().__init__()
 
-    def __init__(
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._rebase_items: Tuple[RebaseItem, ...] = ()
+        self._active_index: Optional[int] = None
+        self._highlighted_indices: List[int] = []
+        self._visible_files: List[str | os.PathLike[str]] = []
+        self._active_file_index: int = -1
+
+        self.styles.grid_columns = "auto"
+        self.styles.grid_gutter_vertical = 1
+        self.styles.grid_rows = "1"
+        self.styles.grid_size_rows = 1
+        self.styles.grid_size_columns = 0
+        # An extra row is added at the bottom so the scroll bar doesn't cover the bottom row.
+        self.styles.height = 2
+        self.styles.overflow_x = "auto"
+
+    def update_state(
         self,
         rebase_items: Tuple[RebaseItem, ...],
         active_index: Optional[int],
         active_file_index: int,
         highlighted_indices: List[int],
         visible_files: List[str | os.PathLike[str]],
-        *args,
-        **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        """Set all of the state
 
+        Call this method after instantiating the widget. Call it again to update all the state.
+        """
         self._rebase_items = rebase_items
         self._active_index = active_index
         self._highlighted_indices = highlighted_indices
         self._visible_files = visible_files
         self._active_file_index = active_file_index
 
-        self.styles.grid_columns = "auto"
-        self.styles.grid_gutter_vertical = 1
-        self.styles.grid_rows = "1"
         self.styles.grid_size_rows = len(rebase_items) + 1
         self.styles.grid_size_columns = len(visible_files)
         # An extra row is added at the bottom so the scroll bar doesn't cover the bottom row.
         self.styles.height = len(rebase_items) + 2
-        self.styles.overflow_x = "auto"
 
     def on_click(self, event: Click) -> None:
         for child_index, child in enumerate(self.children):
