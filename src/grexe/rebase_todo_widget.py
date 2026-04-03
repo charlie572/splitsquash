@@ -47,8 +47,6 @@ class RebaseTodoWidget(Widget):
 
         self._state: Literal["idle", "moving", "distributing"] = "idle"
 
-        self._last_hovered_file = None
-
         # children
         self._status_label: Optional[Label] = None
         self._commit_grid: Optional[CommitGrid] = None
@@ -129,17 +127,6 @@ class RebaseTodoWidget(Widget):
 
             self._state = "idle"
             self._update()
-
-    def on_mouse_move(self, event):
-        # Show a message with the full path of the file the user is hovering over. Use
-        # self._last_hovered file to make sure a new message isn't shown for every frame
-        # that the cursor moves over a file.
-        if isinstance(self.app.mouse_over, FilenameLabel):
-            if self.app.mouse_over.path != self._last_hovered_file:
-                self.notify(self.app.mouse_over.path, timeout=3)
-            self._last_hovered_file = self.app.mouse_over.path
-        else:
-            self._last_hovered_file = None
 
     def on_commit_grid_clicked_commit(self, event):
         self._todo_state.set_cursor(event.commit_index)
@@ -391,6 +378,8 @@ class FileGrid(Grid):
         self._visible_files: List[str | os.PathLike[str]] = files
         self._active_file_index: int = -1
 
+        self._last_hovered_file = None
+
         self.styles.grid_columns = "auto"
         self.styles.grid_gutter_vertical = 1
         self.styles.grid_rows = "1"
@@ -505,6 +494,17 @@ class FileGrid(Grid):
         self.post_message(
             self.SetFileStatus(commit_index, file_change.path, new_included_state)
         )
+
+    def on_mouse_move(self, event):
+        # Show a message with the full path of the file the user is hovering over. Use
+        # self._last_hovered file to make sure a new message isn't shown for every frame
+        # that the cursor moves over a file.
+        if isinstance(self.app.mouse_over, FilenameLabel):
+            if self.app.mouse_over.path != self._last_hovered_file:
+                self.notify(self.app.mouse_over.path, timeout=3)
+            self._last_hovered_file = self.app.mouse_over.path
+        else:
+            self._last_hovered_file = None
 
     def compose(self):
         # header row
