@@ -38,7 +38,6 @@ class RebaseTodoWidget(Widget):
         self._item_distributor = RebaseItemDistributor(self._todo_state)
 
         self._active_file_index = -1
-        self._distribute_sources: Optional[List[int]] = None
 
         self._state: Literal["idle", "moving", "distributing"] = "idle"
 
