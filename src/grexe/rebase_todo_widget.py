@@ -130,9 +130,6 @@ class RebaseTodoWidget(Widget):
             self._state = "idle"
             self._update()
 
-    def get_active_item(self):
-        return self._todo_state.get_active_item()
-
     def on_mouse_move(self, event):
         # Show a message with the full path of the file the user is hovering over. Use
         # self._last_hovered file to make sure a new message isn't shown for every frame
