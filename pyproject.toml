@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "grexe"
 version = "0.0.2"
-requires-python = ">=3.13.1"
+requires-python = ">=3.12"
 authors = [
   {name = "Charlie Bareham", email = "barehamcharlie@gmail.com"},
 ]
@@ -15,6 +15,10 @@ license = "MIT"
 license-files = ["LICENSE"]
 classifiers = [
   "Programming Language :: Python"
+]
+dependencies = [
+    "GitPython",
+    "textual"
 ]
 
 [project.urls]
@@ -26,3 +30,6 @@ grexe-edit-rebase-item = "grexe.scripts.edit_rebase_item:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+grexe = ["styles/*.tcss"]
