@@ -1,6 +1,5 @@
 """These classes provide stateful user interactions to modify the rebase todo."""
 
-from copy import deepcopy
 from typing import List, Optional
 
 from grexe.rebase_todo.distribute import distribute_changes
@@ -34,7 +33,7 @@ class RebaseItemMover:
         The selection will be cleared.
         """
         indices_to_move = self._todo_state.get_indices_to_modify()
-        rebase_items = list(deepcopy(self._todo_state.get_current_items()))
+        rebase_items = list(self._todo_state.get_current_items())
 
         # remove selected items
         items_to_move = [rebase_items.pop(i) for i in reversed(indices_to_move)]
@@ -58,7 +57,7 @@ class RebaseItemMover:
         if not self._moving:
             raise RuntimeError
 
-        rebase_items = list(deepcopy(self._todo_state.get_current_items()))
+        rebase_items = list(self._todo_state.get_current_items())
 
         if self._first_moving_index == 0:
             return
@@ -78,7 +77,7 @@ class RebaseItemMover:
         if not self._moving:
             raise RuntimeError
 
-        rebase_items = list(deepcopy(self._todo_state.get_current_items()))
+        rebase_items = list(self._todo_state.get_current_items())
 
         if self._last_moving_index == len(rebase_items) - 1:
             return

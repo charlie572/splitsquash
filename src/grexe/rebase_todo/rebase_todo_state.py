@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import List, Tuple, Literal, Optional
 
 from grexe.types import RebaseItem
@@ -14,11 +13,21 @@ class RebaseTodoState:
     def get_current_num_items(self):
         return len(self._history[self._history_index])
 
-    def get_current_items(self):
-        return self._history[self._history_index]
+    def get_current_items(self, copy: bool = True):
+        result = self._history[self._history_index]
 
-    def get_original_items(self):
-        return self._history[0]
+        if copy:
+            result = tuple(item.copy() for item in result)
+
+        return result
+
+    def get_original_items(self, copy: bool = True):
+        result = self._history[0]
+
+        if copy:
+            result = tuple(item.copy() for item in result)
+
+        return result
 
     def get_original_files(self, include_files_excluded_by_user: bool = True):
         """Get a list of all the files modified across all the commits in the original state
@@ -63,7 +72,7 @@ class RebaseTodoStateAndCursor:
 
     def get_active_item(self):
         """Get the rebase item currently under the cursor"""
-        return deepcopy(self._state.get_current_items()[self._cursor])
+        return self._state.get_current_items()[self._cursor]
 
     def get_indices_to_modify(self) -> List[int]:
         """Get the indices of the rebase items to modify
@@ -123,11 +132,11 @@ class RebaseTodoStateAndCursor:
     def get_current_num_items(self):
         return self._state.get_current_num_items()
 
-    def get_current_items(self):
-        return self._state.get_current_items()
+    def get_current_items(self, copy: bool = True):
+        return self._state.get_current_items(copy=copy)
 
-    def get_original_items(self):
-        return self._state.get_original_items()
+    def get_original_items(self, copy: bool = True):
+        return self._state.get_original_items(copy=copy)
 
     def modify_items(
         self, rebase_items: Tuple[RebaseItem, ...], clear_selection: bool = False
@@ -167,7 +176,7 @@ class RebaseTodoStateAndCursor:
         if index is None:
             index = self._cursor + 1
 
-        rebase_items = list(deepcopy(self._state.get_current_items()))
+        rebase_items = list(self._state.get_current_items())
 
         rebase_items.insert(index, rebase_item)
         self._selected.insert(index, False)

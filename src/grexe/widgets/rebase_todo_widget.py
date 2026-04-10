@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Literal, Optional
 
 from textual.containers import Horizontal, Vertical
@@ -115,7 +114,7 @@ class RebaseTodoWidget(Widget):
 
     def on_file_grid_set_file_status(self, event):
         # find rebase item to modify
-        rebase_items = list(deepcopy(self._todo_state.get_current_items()))
+        rebase_items = list(self._todo_state.get_current_items())
         rebase_item: RebaseItem = rebase_items[event.commit_index]
 
         # set file change status
@@ -188,7 +187,7 @@ class RebaseTodoWidget(Widget):
         self.update_state()
 
     def _set_rebase_action(self, action: RebaseAction):
-        rebase_items = deepcopy(self._todo_state.get_current_items())
+        rebase_items = self._todo_state.get_current_items()
 
         for i in self._todo_state.get_indices_to_modify():
             rebase_items[i].action = action

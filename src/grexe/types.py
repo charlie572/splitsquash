@@ -1,3 +1,4 @@
+from copy import deepcopy
 from dataclasses import dataclass
 from os import PathLike
 from typing import Literal
@@ -30,3 +31,13 @@ class RebaseItem:
         self.file_changes = {
             file: OptionalFile(file, True) for file in self.commit.stats.files.keys()
         }
+
+    def copy(self):
+        """Copy RebaseItem
+
+        All the mutable fields are deep-copied, except the commit. Deep-copying the commit can
+        lead to max recursion depth errors. I'm not sure why.
+        """
+        result = RebaseItem(self.action, self.commit)
+        result.file_changes = deepcopy(self.file_changes)
+        return result

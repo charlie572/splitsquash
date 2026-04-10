@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Optional
 
 from textual.containers import Horizontal
@@ -46,7 +45,7 @@ class DefaultEditorWidget(Horizontal):
     def on_file_selector_changed_active_files(self, event):
         # set included files in active commit
 
-        rebase_items = deepcopy(self._todo_state.get_current_items())
+        rebase_items = self._todo_state.get_current_items()
         active_item = rebase_items[self._todo_state.cursor]
 
         for file_change in active_item.file_changes.values():

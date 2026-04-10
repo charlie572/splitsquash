@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import List, Tuple
 
 from grexe.types import RebaseItem
@@ -53,7 +52,7 @@ def distribute_changes(
         item = rebase_items[i]
 
         if i not in target_indices:
-            new_item = deepcopy(item)
+            new_item = item.copy()
             if i in source_indices:
                 new_item.action = "drop"
             result.append(new_item)
@@ -71,7 +70,7 @@ def distribute_changes(
         while i < len(rebase_items) and rebase_items[i].action in ("fixup", "squash"):
             if i in source_indices:
                 source_indices_already_squashed.add(i)
-            result.append(deepcopy(rebase_items[i]))
+            result.append(rebase_items[i].copy())
             i += 1
 
         target_file_paths = set(get_included_file_paths(target_item))
@@ -89,7 +88,7 @@ def distribute_changes(
                 continue
 
             # add fixup to squash changes into target commit
-            fixup: RebaseItem = deepcopy(source_item)
+            fixup: RebaseItem = source_item.copy()
             fixup.action = "squash"
             for file_path, file_change in fixup.file_changes.items():
                 file_change.included = file_path in paths_to_squash
