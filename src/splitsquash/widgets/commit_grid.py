@@ -5,7 +5,7 @@ from textual.events import Click
 from textual.message import Message
 from textual.widgets import Label
 
-from grexe.types import RebaseItem
+from splitsquash.types import RebaseItem
 
 
 class CommitGrid(Grid):

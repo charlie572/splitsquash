@@ -5,11 +5,11 @@ from git import Repo
 from textual.app import App
 from textual.widgets import TabbedContent, Tabs
 
-from grexe.widgets.editor_widget_with_file_grid import EditorWidgetWithFileGrid
-from grexe.widgets.default_editor_widget import DefaultEditorWidget
-from grexe.rebase_todo.rebase_todo_state import RebaseTodoState
-from grexe.rebasing import parse_rebase_items, create_rebase_todo_text
-from grexe.types import RebaseItem
+from splitsquash.widgets.editor_widget_with_file_grid import EditorWidgetWithFileGrid
+from splitsquash.widgets.default_editor_widget import DefaultEditorWidget
+from splitsquash.rebase_todo.rebase_todo_state import RebaseTodoState
+from splitsquash.rebasing import parse_rebase_items, create_rebase_todo_text
+from splitsquash.types import RebaseItem
 
 
 class GitRebaseExtendedEditor(App):
@@ -55,7 +55,7 @@ class GitRebaseExtendedEditor(App):
 
 def main():
     parser = argparse.ArgumentParser(
-        "grexe-editor",
+        "splitsquash",
         description="An editor for git rebase todo files.",
     )
     parser.add_argument("rebase_todo_file", type=str)

@@ -2,7 +2,7 @@ import argparse
 
 from git import Repo
 
-from grexe.types import REBASE_ACTIONS
+from splitsquash.types import REBASE_ACTIONS
 
 
 def main():

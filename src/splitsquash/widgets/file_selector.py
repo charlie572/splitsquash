@@ -10,7 +10,7 @@ from textual.message import Message
 from textual.widgets import Tree
 from textual.widgets._tree import TreeNode, TreeDataType
 
-from grexe.types import OptionalFile
+from splitsquash.types import OptionalFile
 
 
 class FileSelector(Tree):

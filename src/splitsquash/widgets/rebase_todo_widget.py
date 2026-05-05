@@ -6,15 +6,15 @@ from textual.message import Message
 from textual.widget import Widget
 from textual.widgets import Label
 
-from grexe.rebase_todo.rebase_todo_interactions import (
+from splitsquash.rebase_todo.rebase_todo_interactions import (
     RebaseItemMover,
     RebaseItemDistributor,
 )
-from grexe.rebase_todo.rebase_todo_state import RebaseTodoStateAndCursor
-from grexe.types import RebaseItem, RebaseAction
-from grexe.utility_functions import get_files_modified
-from grexe.widgets.commit_grid import CommitGrid
-from grexe.widgets.file_grid import FileGrid
+from splitsquash.rebase_todo.rebase_todo_state import RebaseTodoStateAndCursor
+from splitsquash.types import RebaseItem, RebaseAction
+from splitsquash.utility_functions import get_files_modified
+from splitsquash.widgets.commit_grid import CommitGrid
+from splitsquash.widgets.file_grid import FileGrid
 
 
 class RebaseTodoWidget(Widget):

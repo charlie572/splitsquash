@@ -3,8 +3,8 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "grexe"
-version = "0.0.2"
+name = "splitsquash"
+version = "0.0.3"
 requires-python = ">=3.12"
 authors = [
   {name = "Charlie Bareham", email = "barehamcharlie@gmail.com"},
@@ -25,11 +25,11 @@ dependencies = [
 Repository = "https://github.com/me/spam.git"
 
 [project.scripts]
-grexe-editor = "grexe.scripts.editor:main"
-grexe-edit-rebase-item = "grexe.scripts.edit_rebase_item:main"
+splitsquash = "splitsquash.scripts.editor:main"
+ss-edit-rebase-item = "splitsquash.scripts.edit_rebase_item:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-grexe = ["styles/*.tcss"]
+splitsquash = ["styles/*.tcss"]

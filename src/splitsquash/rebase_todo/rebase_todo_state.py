@@ -1,6 +1,6 @@
 from typing import List, Tuple, Literal, Optional
 
-from grexe.types import RebaseItem
+from splitsquash.types import RebaseItem
 
 
 class RebaseTodoState:

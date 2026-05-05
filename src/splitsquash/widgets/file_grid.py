@@ -5,8 +5,8 @@ from textual.containers import Grid
 from textual.events import Click
 from textual.message import Message
 
-from grexe.types import RebaseItem
-from grexe.widgets.utility_widgets import FilenameLabel, FileChangeIndicator
+from splitsquash.types import RebaseItem
+from splitsquash.widgets.utility_widgets import FilenameLabel, FileChangeIndicator
 
 
 class FileGrid(Grid):

@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from grexe.types import RebaseItem
+from splitsquash.types import RebaseItem
 
 
 def get_included_file_paths(rebase_item: RebaseItem):

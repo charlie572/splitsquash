@@ -1,13 +1,13 @@
 from textual.containers import Horizontal
 
-from grexe.utility_functions import get_files_modified
-from grexe.widgets.file_selector import FileSelector
-from grexe.rebase_todo.rebase_todo_state import (
+from splitsquash.utility_functions import get_files_modified
+from splitsquash.widgets.file_selector import FileSelector
+from splitsquash.rebase_todo.rebase_todo_state import (
     RebaseTodoState,
     RebaseTodoStateAndCursor,
 )
-from grexe.widgets.rebase_todo_widget import RebaseTodoWidget
-from grexe.types import OptionalFile
+from splitsquash.widgets.rebase_todo_widget import RebaseTodoWidget
+from splitsquash.types import OptionalFile
 
 
 class EditorWidgetWithFileGrid(Horizontal):

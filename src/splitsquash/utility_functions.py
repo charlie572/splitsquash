@@ -1,6 +1,6 @@
 from typing import Tuple, List
 
-from grexe.types import RebaseItem, OptionalFile
+from splitsquash.types import RebaseItem, OptionalFile
 
 
 def get_files_modified(
