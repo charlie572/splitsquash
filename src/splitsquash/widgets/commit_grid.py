@@ -31,7 +31,7 @@ class CommitGrid(Grid):
         self.styles.grid_gutter_vertical = 2
         self.styles.grid_rows = "1"
         self.styles.grid_size_rows = 1
-        self.styles.grid_size_columns = 3
+        self.styles.grid_size_columns = 4
         self.styles.height = 1
 
     def update_state(
@@ -69,6 +69,7 @@ class CommitGrid(Grid):
         # header row
         yield Label("")
         yield Label("")
+        yield Label("Lines changed")
         yield Label("")
 
         # make boolean array from self._highlighted_indices
@@ -88,6 +89,10 @@ class CommitGrid(Grid):
             yield Label(item.action, classes=f"rebase_action {classes}")
 
             yield Label(item.commit.hexsha[:7], classes=f"hexsha {classes}")
+
+            num_inserted = item.commit.stats.total["insertions"]
+            num_deleted = item.commit.stats.total["deletions"]
+            yield Label(f"[green]+{num_inserted}[/green][red]-{num_deleted}[/red]")
 
             first_message_line = item.commit.message.split("\n")[0]
             yield Label(first_message_line, classes=f"commit_message {classes}")
